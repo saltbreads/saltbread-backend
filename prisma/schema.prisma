@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DessertCategory {
+  saltbread
+}
+
+model Shop {
+  id              String   @id @default(uuid())
+  dessertCategory DessertCategory
+  region          String
+  query           String
+  name            String
+  roadAddress     String
+  jibunAddress    String
+  telephone       String?
+  link            String?  
+  categoryText    String?  
+  longitude       Float
+  latitude        Float
+  geocodeError    String?  
+
+  status          ShopStatus @default(ACTIVE)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([region])
+  @@index([name])
+  @@index([latitude, longitude])
+  @@unique([name, roadAddress, latitude, longitude])
+}
+
+enum ShopStatus {
+  ACTIVE
+  PENDING
+  REJECTED
+}
