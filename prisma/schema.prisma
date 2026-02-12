@@ -12,37 +12,201 @@ datasource db {
   provider = "postgresql"
 }
 
+enum OAuthProvider {
+  GOOGLE
+  NAVER
+  KAKAO
+}
+
+model User {
+  id String @id @default(cuid())
+  provider       OAuthProvider
+  providerUserId String
+  displayName      String?
+  profileImageUrl  String?
+  email            String?
+  nickname         String?
+
+  // 운영
+  status     String   @default("ACTIVE") // ACTIVE | BLOCKED | DELETED 등
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastLoginAt DateTime?
+
+  reviews Review[]
+  reviewImages ReviewImage[]
+
+  @@unique([provider, providerUserId])
+  @@index([provider])
+  @@index([createdAt])
+  @@index([status])
+}
+
 enum DessertCategory {
   saltbread
 }
 
 model Shop {
-  id              String   @id @default(uuid())
+  id String @id @default(cuid())
+
+  // 기본
   dessertCategory DessertCategory
-  region          String
-  query           String
-  name            String
-  roadAddress     String
-  jibunAddress    String
-  telephone       String?
-  link            String?  
-  categoryText    String?  
-  longitude       Float
-  latitude        Float
-  geocodeError    String?  
+  name           String
+  region         String
+  roadAddress    String?
+  jibunAddress   String?
+  telephone      String?
+  heroImageUrl   String?
+  hoursRaw       String?
+  
+  // 운영
+  query String?
+  categoryText String?
+  
+  // 지도
+  latitude  Decimal @db.Decimal(10,7)
+  longitude Decimal @db.Decimal(10,7)
 
-  status          ShopStatus @default(ACTIVE)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  // 네이버 연결
+  naverPlaceId String? @unique
 
-  @@index([region])
-  @@index([name])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  links ShopLink[]
+  menus ShopMenu[]
+  aiBriefing AiBriefing[]
+  reviews Review[]
+  reviewImages ReviewImage[]
+  reviewTags ReviewTag[]
+  @@unique([name, roadAddress])
   @@index([latitude, longitude])
-  @@unique([name, roadAddress, latitude, longitude])
 }
 
-enum ShopStatus {
-  ACTIVE
-  PENDING
-  REJECTED
+model AiBriefing {
+  id String @id @default(cuid())
+  
+  shopId String 
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  content String
+  order Int 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shopId, order])
+  @@index([shopId])
+}
+
+model ShopMenu {
+  id String @id @default(cuid())
+
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  name     String
+  price    Int?      
+  priceText String? 
+  imageUrl String?
+
+  order Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shopId, name])
+  @@index([shopId])
+  @@index([price])
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  // 관계
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  // 작성자(로그인 붙이면 연결)
+  authorId String?
+  author   User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  // 내용
+  rating Int      
+  content String?
+
+  // 메타
+  isHidden Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 연결
+  images ReviewImage[]
+
+  @@index([shopId, createdAt])
+  @@index([shopId, rating])
+}
+
+model ReviewTag {
+  id String @id @default(cuid())
+
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  label String
+  count Int
+  externalCount Int?
+
+  // 노출/운영
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shopId, label])
+}
+
+model ReviewImage {
+  id String @id @default(cuid())
+  
+  shopId String
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  reviewId String
+  review   Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  uploaderId String
+  uploader   User   @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  url String
+  order Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, order])
+  @@index([reviewId])
+  @@index([createdAt])
+  @@index([shopId, createdAt])
+}
+
+model ShopLink {
+  id      String @id @default(cuid())
+  shopId  String
+  type    ShopLinkType
+  url     String
+  label   String?
+  isPrimary Boolean @default(false)
+
+  shop    Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, url])
+  @@index([shopId])
+}
+
+enum ShopLinkType {
+  INSTAGRAM
+  YOUTUBE
+  NAVER_PLACE
+  NAVER_BLOG
+  NAVER_SMARTSTORE
+  KAKAO
+  WEBSITE
+  ETC
 }
