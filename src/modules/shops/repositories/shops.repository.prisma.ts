@@ -10,14 +10,20 @@ export class ShopsPrismaRepository implements IShopsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAllLocations(): Promise<ShopLocation[]> {
-    return this.prisma.shop.findMany({
+    const shops = await this.prisma.shop.findMany({
       select: {
         id: true,
         name: true,
         latitude: true,
         longitude: true,
       },
-      orderBy: { createdAt: 'asc' },
     });
+
+    return shops.map((shop) => ({
+      id: shop.id,
+      name: shop.name,
+      latitude: shop.latitude.toNumber(),
+      longitude: shop.longitude.toNumber(),
+    }));
   }
 }
