@@ -66,6 +66,7 @@ model Shop {
   // 지도
   latitude  Decimal @db.Decimal(10,7)
   longitude Decimal @db.Decimal(10,7)
+  geo Unsupported("geography")?
 
   // 네이버 연결
   naverPlaceId String? @unique
