@@ -1,3 +1,32 @@
 ### 🧭 가게 좌표 전체 조회 (지도 핀용)
-GET http://localhost:3000/shops/locations
+GET http://localhost:4000/shops/locations
 Accept: application/json
+
+### Nearby shops (Daegu center)
+GET http://localhost:4000/shops/nearby?lat=35.8779&lng=128.6285
+
+@base = http://localhost:4000
+
+### 1) 키워드 없이 (근처 기본: radiusKm=3, limit=10, offset=0)
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285
+
+### 2) 키워드 없이 (반경/페이지 지정)
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=5&limit=10&offset=0
+
+### 3) 무한스크롤 2페이지(offset=10)
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=5&limit=10&offset=10
+
+### 4) 지역 키워드 검색 (예: "수성구")
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=10&limit=10&offset=0&search=수성구
+
+### 5) 지역 키워드 검색 (예: "대구")
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=20&limit=10&offset=0&search=대구
+
+### 6) 가게 이름 키워드 검색 (예: "소금빵")
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=10&limit=10&offset=0&search=소금빵
+
+### 7) 가게 이름 키워드 검색 (예: "카페" 같은 일반 키워드)
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=10&limit=10&offset=0&search=카페
+
+### 8) 공백 키워드 테스트 (trim 동작 확인) - 결과는 1)과 동일해야 함
+GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=5&limit=10&offset=0&search=%20%20%20
