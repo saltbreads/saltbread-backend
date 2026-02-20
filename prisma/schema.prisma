@@ -33,6 +33,7 @@ model User {
   updatedAt  DateTime @updatedAt
   lastLoginAt DateTime?
 
+  sessions AuthSession[]
   reviews Review[]
   reviewImages ReviewImage[]
 
@@ -40,6 +41,21 @@ model User {
   @@index([provider])
   @@index([createdAt])
   @@index([status])
+}
+
+model AuthSession {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  expiresAt        DateTime
+  userAgent        String?
+  ip               String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 enum DessertCategory {
