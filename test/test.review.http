@@ -51,3 +51,8 @@ Content-Type: application/json
 ### 리뷰 태그 통계 조회
 GET {{baseUrl}}/shops/clxxxxx/review-tags
 Content-Type: application/json
+
+### 가게 사진 하이라이트 조회 (정상)
+GET {{baseUrl}}/shops/{{shopId}}/photo-highlights
+Content-Type: application/json
+
