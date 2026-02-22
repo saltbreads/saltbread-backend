@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ReviewsController } from './reviews.controller';
 import { ReviewsService } from './reviews.service';
 import { ReviewsPrismaRepository } from './repository/reviews.prisma.repository';
@@ -6,9 +6,11 @@ import { REVIEWS_REPOSITORY } from './interface/reviews.repository.interface';
 import { ShopsModule } from '../shops/shops.module';
 import { REVIEW_TAGS_REPOSITORY } from './interface/review-tags.repository.interface';
 import { ReviewTagsPrismaRepository } from './repository/review-tags.prisma.repository';
+import { REVIEW_IMAGES_REPOSITORY } from './interface/review-images.repository.interface';
+import { ReviewImagesPrismaRepository } from './repository/review-images.prisma.repository';
 
 @Module({
-  imports: [ShopsModule],
+  imports: [forwardRef(() => ShopsModule)],
   controllers: [ReviewsController],
   providers: [
     ReviewsService,
@@ -20,6 +22,11 @@ import { ReviewTagsPrismaRepository } from './repository/review-tags.prisma.repo
       provide: REVIEW_TAGS_REPOSITORY,
       useClass: ReviewTagsPrismaRepository,
     },
+    {
+      provide: REVIEW_IMAGES_REPOSITORY,
+      useClass: ReviewImagesPrismaRepository,
+    },
   ],
+  exports: [REVIEW_IMAGES_REPOSITORY],
 })
 export class ReviewsModule {}

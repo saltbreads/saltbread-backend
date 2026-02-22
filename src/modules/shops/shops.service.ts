@@ -13,13 +13,20 @@ import {
   type IShopMenuRepository,
   SHOP_MENU_REPOSITORY,
 } from './interface/shop-menu.repository.interface';
+import {
+  type IReviewImagesRepository,
+  REVIEW_IMAGES_REPOSITORY,
+} from '../reviews/interface/review-images.repository.interface';
 
 @Injectable()
 export class ShopsService {
   constructor(
-    @Inject(SHOPS_REPOSITORY) private readonly shopsRepo: IShopsRepository,
+    @Inject(SHOPS_REPOSITORY)
+    private readonly shopsRepo: IShopsRepository,
     @Inject(SHOP_MENU_REPOSITORY)
     private readonly shopMenuRepo: IShopMenuRepository,
+    @Inject(REVIEW_IMAGES_REPOSITORY)
+    private readonly reviewImagesRepo: IReviewImagesRepository,
   ) {}
 
   async getAllLocations() {
@@ -117,5 +124,30 @@ export class ShopsService {
         imageUrl: m.imageUrl,
       };
     });
+  }
+
+  async getPhotoHighlights(shopId: string) {
+    const shop = await this.shopsRepo.findById(shopId);
+    if (!shop) throw new NotFoundException('Shop not found');
+
+    const heroUrl = shop.heroImageUrl ?? null;
+
+    const need = heroUrl ? 4 : 5;
+
+    const reviewImages = await this.reviewImagesRepo.findRecentByShopId(
+      shopId,
+      need,
+    );
+
+    return {
+      hero: heroUrl ? { url: heroUrl } : null,
+      items: reviewImages.map((img) => ({
+        id: img.id,
+        url: img.url,
+        reviewId: img.reviewId,
+        createdAt: img.createdAt,
+      })),
+      total: (heroUrl ? 1 : 0) + reviewImages.length,
+    };
   }
 }

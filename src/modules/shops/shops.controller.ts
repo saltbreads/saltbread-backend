@@ -36,4 +36,23 @@ export class ShopsController {
     const data = await this.shopsService.getShopMenus(shopId);
     return { success: true, data };
   }
+
+  /**
+   * 가게 사진 하이라이트 조회
+   *
+   * 정책:
+   * - heroImageUrl이 존재하면 hero 1장 + 최신 리뷰 이미지 4장
+   * - heroImageUrl이 없으면 최신 리뷰 이미지 5장
+   *
+   * 상단 미리보기 영역(UI) 최적화를 위한 경량 API
+   */
+  @Get(':shopId/photo-highlights')
+  async getPhotoHighlights(@Param('shopId') shopId: string) {
+    const data = await this.shopsService.getPhotoHighlights(shopId);
+
+    return {
+      success: true,
+      data,
+    };
+  }
 }
