@@ -13,5 +13,6 @@ import { ShopMenuPrismaRepository } from './repositories/shop-menu.prisma.reposi
     { provide: SHOPS_REPOSITORY, useClass: ShopsPrismaRepository },
     { provide: SHOP_MENU_REPOSITORY, useClass: ShopMenuPrismaRepository },
   ],
+  exports: [SHOPS_REPOSITORY],
 })
 export class ShopsModule {}

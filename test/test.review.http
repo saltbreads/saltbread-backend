@@ -1,0 +1,50 @@
+### ===============================
+### Reviews API - Shop Reviews (Pagination)
+### ===============================
+
+@baseUrl = http://localhost:4000
+@shopId = cmlj8rdbl0000qou1dde40vu2
+
+
+### 1) 기본 조회 (기본값: page=1, limit=10, sort=latest)
+GET {{baseUrl}}/shops/{{shopId}}/reviews
+Accept: application/json
+
+
+### 2) 페이지/리밋 지정
+GET {{baseUrl}}/shops/{{shopId}}/reviews?page=1&limit=5
+Accept: application/json
+
+
+### 3) 다음 페이지
+GET {{baseUrl}}/shops/{{shopId}}/reviews?page=2&limit=5
+Accept: application/json
+
+
+### 4) 평점순 정렬 (rating desc, createdAt desc)
+GET {{baseUrl}}/shops/{{shopId}}/reviews?sort=rating&page=1&limit=10
+Accept: application/json
+
+
+### ===============================
+### Validation / Error Cases
+### ===============================
+
+### 5) 존재하지 않는 shopId (404 기대)
+GET {{baseUrl}}/shops/NOT_EXIST_SHOP_ID/reviews
+Accept: application/json
+
+
+### 6) page 잘못된 값 (400 기대)
+GET {{baseUrl}}/shops/{{shopId}}/reviews?page=0&limit=10
+Accept: application/json
+
+
+### 7) limit 너무 큼 (400 기대)  - DTO에서 Max(50) 기준
+GET {{baseUrl}}/shops/{{shopId}}/reviews?page=1&limit=999
+Accept: application/json
+
+
+### 8) sort 잘못된 값 (400 기대)
+GET {{baseUrl}}/shops/{{shopId}}/reviews?sort=hello
+Accept: application/json
