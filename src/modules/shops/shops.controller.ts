@@ -30,4 +30,10 @@ export class ShopsController {
     const data = await this.shopsService.getShopHome(shopId);
     return { sucess: true, data };
   }
+
+  @Get(':shopId/menus')
+  async hetShopMenu(@Param('shopId') shopId: string) {
+    const data = await this.shopsService.getShopMenus(shopId);
+    return { success: true, data };
+  }
 }

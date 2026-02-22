@@ -47,3 +47,14 @@ Content-Type: application/json
 ### 변수 선언 (파일 맨 아래에 둬도 됨)
 @shopId = cmlj8rdbl0000qou1dde40vu2
 @NOT_EXIST_SHOP_ID = cmlj8rdbl0000qou1dde40vu3
+
+### 메뉴 조회
+GET {{base}}/shops/{{shopId}}/menus
+Accept: application/json
+
+### 존재하지 않는 shop 테스트 (404)
+GET {{base}}/shops/{{NOT_EXIST_SHOP_ID}}/menus
+Accept: application/json
+
+### 변수
+@shopId = 여기에_실제_shop_id_붙여넣기
