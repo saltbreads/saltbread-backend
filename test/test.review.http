@@ -25,11 +25,6 @@ Accept: application/json
 GET {{baseUrl}}/shops/{{shopId}}/reviews?sort=rating&page=1&limit=10
 Accept: application/json
 
-
-### ===============================
-### Validation / Error Cases
-### ===============================
-
 ### 5) 존재하지 않는 shopId (404 기대)
 GET {{baseUrl}}/shops/NOT_EXIST_SHOP_ID/reviews
 Accept: application/json
@@ -48,3 +43,11 @@ Accept: application/json
 ### 8) sort 잘못된 값 (400 기대)
 GET {{baseUrl}}/shops/{{shopId}}/reviews?sort=hello
 Accept: application/json
+
+### 리뷰 태그 통계 조회
+GET {{baseUrl}}/shops/{{shopId}}/review-tags
+Content-Type: application/json
+
+### 리뷰 태그 통계 조회
+GET {{baseUrl}}/shops/clxxxxx/review-tags
+Content-Type: application/json
