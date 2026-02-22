@@ -7,32 +7,19 @@ import { GetNearbyShopsQueryDto } from './dto/get-nearby-shops.query.dto';
 import { GetSearchShopsQueryDto } from './dto/get-search-shops.query.dto';
 import { ShopLinkType } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
-type ShopHomeDto = {
-  shopId: string;
-  name: string;
-  address: {
-    road: string | null;
-    jibun: string | null;
-  };
-  telephone: string | null;
-  hoursRaw: string | null;
-  links: {
-    website: string | null;
-    instagram: string | null;
-    kakao: string | null;
-    etc: Array<{
-      type: ShopLinkType;
-      url: string;
-      label: string | null;
-      isPrimary: boolean;
-    }>;
-  };
-};
+import { ShopMenuDto } from './dto/shop-menu.dto';
+import { ShopHomeDto } from './dto/shop-home.dto';
+import {
+  type IShopMenuRepository,
+  SHOP_MENU_REPOSITORY,
+} from './interface/shop-menu.repository.interface';
 
 @Injectable()
 export class ShopsService {
   constructor(
     @Inject(SHOPS_REPOSITORY) private readonly shopsRepo: IShopsRepository,
+    @Inject(SHOP_MENU_REPOSITORY)
+    private readonly shopMenuRepo: IShopMenuRepository,
   ) {}
 
   async getAllLocations() {
@@ -109,5 +96,26 @@ export class ShopsService {
         etc,
       },
     };
+  }
+
+  async getShopMenus(shopId: string): Promise<ShopMenuDto[]> {
+    const shop = await this.shopsRepo.findById(shopId);
+    if (!shop) throw new NotFoundException('Shop not found');
+
+    const menus = await this.shopMenuRepo.findByShopId(shopId);
+
+    return menus.map((m) => {
+      const displayPrice =
+        m.price !== null ? m.price : m.priceText !== null ? m.priceText : null;
+
+      return {
+        id: m.id,
+        name: m.name,
+        price: m.price,
+        priceText: m.priceText,
+        displayPrice,
+        imageUrl: m.imageUrl,
+      };
+    });
   }
 }
