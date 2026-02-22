@@ -16,4 +16,12 @@ export interface IReviewImagesRepository {
     take: number,
     ctx?: TransactionContext<Prisma.TransactionClient>,
   ): Promise<ReviewImageListItem[]>;
+  findCursorByShopId(
+    shopId: string,
+    args: {
+      take: number;
+      cursorId?: string;
+    },
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<ReviewImageListItem[]>;
 }
