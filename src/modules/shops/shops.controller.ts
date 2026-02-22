@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ShopsService } from './shops.service';
 import { GetNearbyShopsQueryDto } from './dto/get-nearby-shops.query.dto';
 import { GetSearchShopsQueryDto } from './dto/get-search-shops.query.dto';
@@ -23,5 +23,11 @@ export class ShopsController {
   async getNearbyShops(@Query() query: GetNearbyShopsQueryDto) {
     const data = await this.shopsService.getNearbyShops(query);
     return { success: true, data };
+  }
+
+  @Get(':shopId/home')
+  async getShopHome(@Param('shopId') shopId: string) {
+    const data = await this.shopsService.getShopHome(shopId);
+    return { sucess: true, data };
   }
 }

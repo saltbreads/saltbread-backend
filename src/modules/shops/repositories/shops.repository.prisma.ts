@@ -8,7 +8,8 @@ import type {
 import { NearbyShopCard } from 'src/modules/shops/interface/shops.repository.interface';
 import { SearchShopCard } from '../interface/shops.repository.interface';
 import { toNumberSafe } from 'src/shared/utils/toNumberSafe';
-import { Prisma } from '@prisma/client';
+import { Prisma, Shop } from '@prisma/client';
+import { ShopHomeRecord } from '../interface/shops.repository.interface';
 
 type NearbyShopCardRow = {
   id: string;
@@ -24,6 +25,12 @@ type NearbyShopCardRow = {
 @Injectable()
 export class ShopsPrismaRepository implements IShopsRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findById(shopId: string): Promise<Shop | null> {
+    return this.prisma.shop.findUnique({
+      where: { id: shopId },
+    });
+  }
 
   async findAllLocations(): Promise<ShopLocation[]> {
     const shops = await this.prisma.shop.findMany({
@@ -212,5 +219,28 @@ export class ShopsPrismaRepository implements IShopsRepository {
       avgPrice: r.avgPrice == null ? null : Number(r.avgPrice),
       bestLabels: Array.isArray(r.bestLabels) ? r.bestLabels : [],
     }));
+  }
+
+  async findShopHomeById(shopId: string): Promise<ShopHomeRecord | null> {
+    return (await this.prisma.shop.findUnique({
+      where: { id: shopId },
+      select: {
+        id: true,
+        name: true,
+        roadAddress: true,
+        jibunAddress: true,
+        telephone: true,
+        hoursRaw: true,
+        links: {
+          select: {
+            type: true,
+            url: true,
+            label: true,
+            isPrimary: true,
+          },
+          orderBy: [{ isPrimary: 'desc' }, { id: 'asc' }],
+        },
+      },
+    })) as ShopHomeRecord | null;
   }
 }

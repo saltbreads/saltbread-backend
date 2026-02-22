@@ -5,6 +5,29 @@ import {
 } from './interface/shops.repository.interface';
 import { GetNearbyShopsQueryDto } from './dto/get-nearby-shops.query.dto';
 import { GetSearchShopsQueryDto } from './dto/get-search-shops.query.dto';
+import { ShopLinkType } from '@prisma/client';
+import { NotFoundException } from '@nestjs/common';
+type ShopHomeDto = {
+  shopId: string;
+  name: string;
+  address: {
+    road: string | null;
+    jibun: string | null;
+  };
+  telephone: string | null;
+  hoursRaw: string | null;
+  links: {
+    website: string | null;
+    instagram: string | null;
+    kakao: string | null;
+    etc: Array<{
+      type: ShopLinkType;
+      url: string;
+      label: string | null;
+      isPrimary: boolean;
+    }>;
+  };
+};
 
 @Injectable()
 export class ShopsService {
@@ -42,5 +65,49 @@ export class ShopsService {
       limit,
       offset,
     });
+  }
+
+  async getShopHome(shopId: string): Promise<ShopHomeDto> {
+    const shop = await this.shopsRepo.findShopHomeById(shopId);
+    if (!shop) throw new NotFoundException('Shop not found');
+
+    const mainTypes = new Set<ShopLinkType>([
+      ShopLinkType.WEBSITE,
+      ShopLinkType.INSTAGRAM,
+      ShopLinkType.KAKAO,
+    ]);
+
+    const pickFirst = (type: ShopLinkType) =>
+      shop.links.find((l) => l.type === type)?.url ?? null;
+
+    const website = pickFirst(ShopLinkType.WEBSITE);
+    const instagram = pickFirst(ShopLinkType.INSTAGRAM);
+    const kakao = pickFirst(ShopLinkType.KAKAO);
+
+    const etc = shop.links
+      .filter((l) => !mainTypes.has(l.type))
+      .map((l) => ({
+        type: l.type,
+        url: l.url,
+        label: l.label,
+        isPrimary: l.isPrimary,
+      }));
+
+    return {
+      shopId: shop.id,
+      name: shop.name,
+      address: {
+        road: shop.roadAddress,
+        jibun: shop.jibunAddress,
+      },
+      telephone: shop.telephone,
+      hoursRaw: shop.hoursRaw,
+      links: {
+        website,
+        instagram,
+        kakao,
+        etc,
+      },
+    };
   }
 }
