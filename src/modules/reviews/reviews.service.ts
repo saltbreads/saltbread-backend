@@ -16,6 +16,8 @@ import {
   type ITransactionRunner,
 } from 'src/shared/prisma/transaction-runner.interface';
 import type { ReviewListItemRecord } from './interface/reviews.repository.interface';
+import { REVIEW_TAGS_REPOSITORY } from './interface/review-tags.repository.interface';
+import { type IReviewTagsRepository } from './interface/review-tags.repository.interface';
 
 @Injectable()
 export class ReviewsService {
@@ -28,6 +30,9 @@ export class ReviewsService {
 
     @Inject(TRANSACTION_RUNNER)
     private readonly txRunner: ITransactionRunner<Prisma.TransactionClient>,
+
+    @Inject(REVIEW_TAGS_REPOSITORY)
+    private readonly reviewTagsRepo: IReviewTagsRepository,
   ) {}
 
   async getShopReviews(shopId: string, query: GetShopReviewsQueryDto) {
@@ -88,5 +93,37 @@ export class ReviewsService {
       total,
       hasNext: page * limit < total,
     };
+  }
+
+  // TODO:
+  // 현재는 서비스 초기 단계로 내부 리뷰 데이터가 충분하지 않기 때문에,
+  // 태그 노출 강화를 위해 count + externalCount(displayCount) 기준으로 정렬한다.
+  //
+  // externalCount는 초기 부스팅 및 외부 데이터 연동을 위한 보조 지표이며,
+  // 서비스 안정화 후 제거할 예정이다.
+  //
+  // 이후에는 DB count 기반 정렬로 전환하고,
+  // 정렬 로직을 Service → Repository(DB orderBy)로 이동하여 성능을 개선한다.
+  async getShopReviewTags(shopId: string) {
+    const shop = await this.shopRepo.findById(shopId);
+    if (!shop) throw new NotFoundException('Shop not found');
+
+    const tags = await this.reviewTagsRepo.findByShopId(shopId);
+
+    const mapped = tags.map((t) => {
+      const external = t.externalCount ?? 0;
+
+      return {
+        id: t.id,
+        label: t.label,
+        count: t.count,
+        externalCount: t.externalCount,
+        displayCount: t.count + external,
+      };
+    });
+
+    mapped.sort((a, b) => b.displayCount - a.displayCount);
+
+    return { items: mapped };
   }
 }

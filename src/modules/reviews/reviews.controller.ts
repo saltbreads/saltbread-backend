@@ -18,4 +18,10 @@ export class ReviewsController {
       data,
     };
   }
+
+  @Get('shops/:shopId/review-tags')
+  async getShopReviewTags(@Param('shopId') shopId: string) {
+    const data = await this.reviewsService.getShopReviewTags(shopId);
+    return { success: true, data };
+  }
 }
