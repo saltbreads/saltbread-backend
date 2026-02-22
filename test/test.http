@@ -30,3 +30,20 @@ GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=10&limit=10&offset=0
 
 ### 8) 공백 키워드 테스트 (trim 동작 확인) - 결과는 1)과 동일해야 함
 GET {{base}}/shops/search?lat=35.8779&lng=128.6285&radiusKm=5&limit=10&offset=0&search=%20%20%20
+
+### Shop Home (기본) - shopId만
+GET {{base}}/shops/{{shopId}}/home
+Accept: application/json
+
+### 없는 shopId 테스트 (404 나와야 정상)
+GET {{base}}/shops/{{NOT_EXIST_SHOP_ID}}/home
+Accept: application/json
+
+### Shop Home 응답 예시 확인용(헤더만 다르게)
+GET {{base}}/shops/{{shopId}}/home
+Accept: application/json
+Content-Type: application/json
+
+### 변수 선언 (파일 맨 아래에 둬도 됨)
+@shopId = cmlj8rdbl0000qou1dde40vu2
+@NOT_EXIST_SHOP_ID = cmlj8rdbl0000qou1dde40vu3
