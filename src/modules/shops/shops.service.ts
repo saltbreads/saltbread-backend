@@ -17,6 +17,7 @@ import {
   type IReviewImagesRepository,
   REVIEW_IMAGES_REPOSITORY,
 } from '../reviews/interface/review-images.repository.interface';
+import { GetShopPhotosQueryDto } from './dto/get-shop-photos-query.dto';
 
 @Injectable()
 export class ShopsService {
@@ -148,6 +149,42 @@ export class ShopsService {
         createdAt: img.createdAt,
       })),
       total: (heroUrl ? 1 : 0) + reviewImages.length,
+    };
+  }
+
+  async getShopPhotos(shopId: string, query: GetShopPhotosQueryDto) {
+    const shop = await this.shopsRepo.findById(shopId);
+    if (!shop) throw new NotFoundException('Shop not found');
+
+    const limit = query.limit ?? 20;
+    const cursor = query.cursor;
+
+    // 첫 페이지에서만 hero 포함
+    const heroUrl = !cursor ? (shop.heroImageUrl ?? null) : null;
+
+    // hasNext 판정하기 위해 서비스에서 take + 1 로 가져옴
+    const take = limit + 1;
+    const rows = await this.reviewImagesRepo.findCursorByShopId(shopId, {
+      take,
+      cursorId: cursor,
+    });
+
+    const hasNext = rows.length > limit;
+    const items = hasNext ? rows.slice(0, limit) : rows;
+
+    const lastItem = items[items.length - 1];
+    const nextCursor = hasNext && lastItem ? lastItem.id : null;
+
+    return {
+      hero: heroUrl ? { url: heroUrl } : null,
+      items: items.map((img) => ({
+        id: img.id,
+        url: img.url,
+        reviewId: img.reviewId,
+        createdAt: img.createdAt,
+      })),
+      nextCursor,
+      hasNext,
     };
   }
 }

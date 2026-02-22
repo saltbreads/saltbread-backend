@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ShopsService } from './shops.service';
 import { GetNearbyShopsQueryDto } from './dto/get-nearby-shops.query.dto';
 import { GetSearchShopsQueryDto } from './dto/get-search-shops.query.dto';
-
+import { GetShopPhotosQueryDto } from './dto/get-shop-photos-query.dto';
 @Controller('shops')
 export class ShopsController {
   constructor(private readonly shopsService: ShopsService) {}
@@ -49,6 +49,19 @@ export class ShopsController {
   @Get(':shopId/photo-highlights')
   async getPhotoHighlights(@Param('shopId') shopId: string) {
     const data = await this.shopsService.getPhotoHighlights(shopId);
+
+    return {
+      success: true,
+      data,
+    };
+  }
+
+  @Get(':shopId/photos')
+  async getShopPhotos(
+    @Param('shopId') shopId: string,
+    @Query() query: GetShopPhotosQueryDto,
+  ) {
+    const data = await this.shopsService.getShopPhotos(shopId, query);
 
     return {
       success: true,

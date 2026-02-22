@@ -56,3 +56,10 @@ Content-Type: application/json
 GET {{baseUrl}}/shops/{{shopId}}/photo-highlights
 Content-Type: application/json
 
+### 존재하지 않는 가게
+GET {{baseUrl}}/shops/not-exist/photo-highlights
+Content-Type: application/json
+
+### 가게 사진 첫 페이지 (hero + review images)
+GET {{baseUrl}}/shops/{{shopId}}/photos
+Content-Type: application/json
