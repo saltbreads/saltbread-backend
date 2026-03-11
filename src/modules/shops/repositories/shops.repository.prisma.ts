@@ -103,14 +103,14 @@ export class ShopsPrismaRepository implements IShopsRepository {
 
       WHERE s."isActive" = true
         AND s."geo" IS NOT NULL
-        AND public.ST_DWithin(
+        AND extensions.ST_DWithin(
           s."geo",
-          public.ST_SetSRID(public.ST_MakePoint(${lng}, ${lat}), 4326)::public.geography,
+          extensions.ST_SetSRID(extensions.ST_MakePoint(${lng}, ${lat}), 4326)::extensions.geography,
           ${radiusKm} * 1000
         )
-      ORDER BY public.ST_Distance(
+      ORDER BY extensions.ST_Distance(
         s."geo",
-        public.ST_SetSRID(public.ST_MakePoint(${lng}, ${lat}), 4326)::public.geography
+        extensions.ST_SetSRID(extensions.ST_MakePoint(${lng}, ${lat}), 4326)::extensions.geography
       ) ASC
       LIMIT ${limit}
       OFFSET ${offset};
@@ -134,7 +134,7 @@ export class ShopsPrismaRepository implements IShopsRepository {
     const search = (params.search ?? '').trim();
 
     const point = Prisma.sql`
-      public.ST_SetSRID(public.ST_MakePoint(${lng}, ${lat}), 4326)::public.geography
+      extensions.ST_SetSRID(extensions.ST_MakePoint(${lng}, ${lat}), 4326)::extensions.geography
     `;
 
     // search가 있을 때만 WHERE 조건을 추가
@@ -195,13 +195,13 @@ export class ShopsPrismaRepository implements IShopsRepository {
   
         WHERE s."isActive" = true
           AND s."geo" IS NOT NULL
-          AND public.ST_DWithin(
+          AND extensions.ST_DWithin(
             s."geo",
             ${point},
             ${radiusKm} * 1000
           )
           ${searchWhere}
-        ORDER BY public.ST_Distance(s."geo", ${point}) ASC
+        ORDER BY extensions.ST_Distance(s."geo", ${point}) ASC
         LIMIT ${limit}
         OFFSET ${offset};
       `,
