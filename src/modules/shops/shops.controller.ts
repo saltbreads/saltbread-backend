@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Header, Param, Query } from '@nestjs/common';
 import { ShopsService } from './shops.service';
 import { GetNearbyShopsQueryDto } from './dto/get-nearby-shops.query.dto';
 import { GetSearchShopsQueryDto } from './dto/get-search-shops.query.dto';
@@ -13,6 +13,7 @@ export class ShopsController {
     return { success: true, data };
   }
 
+  @Header('Cache-Control', 'no-store')
   @Get('search')
   async searchShops(@Query() query: GetSearchShopsQueryDto) {
     const data = await this.shopsService.searchShops(query);
@@ -28,7 +29,7 @@ export class ShopsController {
   @Get(':shopId/home')
   async getShopHome(@Param('shopId') shopId: string) {
     const data = await this.shopsService.getShopHome(shopId);
-    return { sucess: true, data };
+    return { success: true, data };
   }
 
   @Get(':shopId/menus')

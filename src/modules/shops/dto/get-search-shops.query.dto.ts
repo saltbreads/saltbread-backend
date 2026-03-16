@@ -23,7 +23,7 @@ export class GetSearchShopsQueryDto {
   @IsNumber()
   @Min(0.1)
   @Max(50)
-  radiusKm?: number = 3;
+  radiusKm?: number = 50;
 
   @IsOptional()
   @Type(() => Number)

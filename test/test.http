@@ -56,5 +56,3 @@ Accept: application/json
 GET {{base}}/shops/{{NOT_EXIST_SHOP_ID}}/menus
 Accept: application/json
 
-### 변수
-@shopId = 여기에_실제_shop_id_붙여넣기

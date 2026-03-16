@@ -9,6 +9,8 @@ import { SESSION_REPOSITORY } from './interface/session.repository.interface';
 import { AuthController } from './auth.controller';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
+import { RedisProvider } from 'src/shared/redis/redis.provider';
+import { OAuthCodeService } from './oauth.code.service';
 
 @Module({
   imports: [ConfigModule, JwtModule.register({}), UsersModule],
@@ -19,6 +21,8 @@ import { NaverStrategy } from './strategies/naver.strategy';
     KakaoStrategy,
     NaverStrategy,
     SessionPrismaRepository,
+    OAuthCodeService,
+    RedisProvider,
     {
       provide: SESSION_REPOSITORY,
       useExisting: SessionPrismaRepository,
