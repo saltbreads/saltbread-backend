@@ -7,6 +7,8 @@ import {
   Body,
   UnauthorizedException,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -84,6 +86,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies?.['refresh_token'] as string | undefined;
     if (!refreshToken) {
@@ -98,10 +101,17 @@ export class AuthController {
 
     this.setRefreshCookie(res, newRefreshToken);
 
-    return res.json({ accessToken, sessionId });
+    return res.json({
+      success: true,
+      data: {
+        accessToken,
+        sessionId,
+      },
+    });
   }
 
   @Post('exchange')
+  @HttpCode(HttpStatus.OK)
   async exchange(
     @Body('code') code: string,
     @Req() req: Request,
@@ -126,12 +136,16 @@ export class AuthController {
     this.setRefreshCookie(res, refreshToken);
 
     return res.json({
-      accessToken,
-      sessionId,
+      success: true,
+      data: {
+        accessToken,
+        sessionId,
+      },
     });
   }
 
   @Post('logout')
+  @HttpCode(HttpStatus.OK)
   async logout(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies?.['refresh_token'] as string | undefined;
 
@@ -154,6 +168,11 @@ export class AuthController {
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
-    return res.json({ ok: true });
+    return res.json({
+      success: true,
+      data: {
+        ok: true,
+      },
+    });
   }
 }
