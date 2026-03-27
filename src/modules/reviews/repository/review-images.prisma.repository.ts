@@ -11,6 +11,22 @@ import type {
 @Injectable()
 export class ReviewImagesPrismaRepository implements IReviewImagesRepository {
   constructor(private readonly prisma: PrismaService) {}
+  async createMany(
+    data: Array<{
+      shopId: string;
+      reviewId: string;
+      uploaderId: string;
+      url: string;
+      order: number;
+    }>,
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<void> {
+    const db = getDb(ctx, this.prisma);
+
+    await db.reviewImage.createMany({
+      data,
+    });
+  }
 
   async findRecentByShopId(
     shopId: string,

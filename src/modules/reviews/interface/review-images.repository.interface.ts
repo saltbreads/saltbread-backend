@@ -11,6 +11,16 @@ export type ReviewImageListItem = {
 };
 
 export interface IReviewImagesRepository {
+  createMany(
+    data: Array<{
+      shopId: string;
+      reviewId: string;
+      uploaderId: string;
+      url: string;
+      order: number;
+    }>,
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<void>;
   findRecentByShopId(
     shopId: string,
     take: number,

@@ -1,6 +1,17 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Req,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { GetShopReviewsQueryDto } from './dto/get-shop-reviews-query-dto';
+import { CreateReviewDto } from './dto/create-review-dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller()
 export class ReviewsController {
@@ -23,5 +34,24 @@ export class ReviewsController {
   async getShopReviewTags(@Param('shopId') shopId: string) {
     const data = await this.reviewsService.getShopReviewTags(shopId);
     return { success: true, data };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('shops/:shopId/reviews')
+  async createReview(
+    @Param('shopId') shopId: string,
+    @Body() body: CreateReviewDto,
+    @Req() req: { user: { userId: string } },
+  ) {
+    const data = await this.reviewsService.createReview(
+      shopId,
+      req.user.userId,
+      body,
+    );
+
+    return {
+      success: true,
+      data,
+    };
   }
 }
