@@ -11,6 +11,7 @@ import { KakaoStrategy } from './strategies/kakao.strategy';
 import { NaverStrategy } from './strategies/naver.strategy';
 import { RedisProvider } from 'src/shared/redis/redis.provider';
 import { OAuthCodeService } from './oauth.code.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [ConfigModule, JwtModule.register({}), UsersModule],
@@ -27,7 +28,8 @@ import { OAuthCodeService } from './oauth.code.service';
       provide: SESSION_REPOSITORY,
       useExisting: SessionPrismaRepository,
     },
+    JwtAuthGuard,
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

@@ -18,6 +18,11 @@ import {
 import type { ReviewListItemRecord } from './interface/reviews.repository.interface';
 import { REVIEW_TAGS_REPOSITORY } from './interface/review-tags.repository.interface';
 import { type IReviewTagsRepository } from './interface/review-tags.repository.interface';
+import { CreateReviewDto } from './dto/create-review-dto';
+import {
+  type IReviewImagesRepository,
+  REVIEW_IMAGES_REPOSITORY,
+} from './interface/review-images.repository.interface';
 
 @Injectable()
 export class ReviewsService {
@@ -33,6 +38,9 @@ export class ReviewsService {
 
     @Inject(REVIEW_TAGS_REPOSITORY)
     private readonly reviewTagsRepo: IReviewTagsRepository,
+
+    @Inject(REVIEW_IMAGES_REPOSITORY)
+    private readonly reviewImagesRepo: IReviewImagesRepository,
   ) {}
 
   async getShopReviews(shopId: string, query: GetShopReviewsQueryDto) {
@@ -125,5 +133,67 @@ export class ReviewsService {
     mapped.sort((a, b) => b.displayCount - a.displayCount);
 
     return { items: mapped };
+  }
+
+  async createReview(shopId: string, userId: string, body: CreateReviewDto) {
+    // 1) shop 존재 확인
+    const shop = await this.shopRepo.findById(shopId);
+    if (!shop) throw new NotFoundException('Shop not found');
+
+    // 2) 리뷰 + 이미지 한 트랜잭션에서 생성
+    const created = await this.txRunner.run(async (ctx) => {
+      const review = await this.reviewRepo.create(
+        {
+          shopId,
+          authorId: userId,
+          rating: body.rating,
+          content: body.content ?? null,
+        },
+        ctx,
+      );
+
+      if (body.imageUrls?.length) {
+        await this.reviewImagesRepo.createMany(
+          body.imageUrls.map((url, index) => ({
+            shopId,
+            reviewId: review.id,
+            uploaderId: userId,
+            url,
+            order: index,
+          })),
+          ctx,
+        );
+      }
+
+      const reviewWithImages = await this.reviewRepo.findById(review.id, ctx);
+
+      if (!reviewWithImages) {
+        throw new NotFoundException('Created review not found');
+      }
+
+      return reviewWithImages;
+    });
+
+    // 3) 응답 가공
+    return {
+      id: created.id,
+      rating: created.rating,
+      content: created.content,
+      createdAt: created.createdAt,
+
+      author: created.author
+        ? {
+            id: created.author.id,
+            nickname: created.author.nickname ?? null,
+            profileImageUrl: created.author.profileImageUrl ?? null,
+          }
+        : null,
+
+      images: created.images.map((img) => ({
+        id: img.id,
+        url: img.url,
+        order: img.order,
+      })),
+    };
   }
 }

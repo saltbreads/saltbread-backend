@@ -1,4 +1,3 @@
-// src/modules/reviews/repository/reviews.repository.ts
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/shared/prisma/prisma.service';
@@ -9,11 +8,66 @@ import type {
   ReviewOrderBy,
   ReviewListItemRecord,
 } from '../interface/reviews.repository.interface';
+import { ReviewDetailRecord } from '../interface/reviews.repository.interface';
 
 @Injectable()
 export class ReviewsPrismaRepository implements IReviewsRepository {
   constructor(private readonly prisma: PrismaService) {}
+  async create(
+    data: {
+      shopId: string;
+      authorId: string;
+      rating: number;
+      content: string | null;
+    },
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<{ id: string }> {
+    const db = getDb(ctx, this.prisma);
 
+    const review = await db.review.create({
+      data,
+      select: {
+        id: true,
+      },
+    });
+
+    return review;
+  }
+
+  async findById(
+    reviewId: string,
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<ReviewDetailRecord | null> {
+    const db = getDb(ctx, this.prisma);
+
+    return db.review.findUnique({
+      where: {
+        id: reviewId,
+      },
+      select: {
+        id: true,
+        rating: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        author: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
+        images: {
+          select: {
+            id: true,
+            url: true,
+            order: true,
+          },
+          orderBy: [{ order: 'asc' }, { id: 'asc' }],
+        },
+      },
+    });
+  }
   async countByShopId(
     shopId: string,
     ctx?: TransactionContext<Prisma.TransactionClient>,

@@ -30,7 +30,44 @@ export type ReviewListItemRecord = Prisma.ReviewGetPayload<{
   };
 }>;
 
+export type ReviewDetailRecord = Prisma.ReviewGetPayload<{
+  select: {
+    id: true;
+    rating: true;
+    content: true;
+    createdAt: true;
+    updatedAt: true;
+    author: {
+      select: {
+        id: true;
+        nickname: true;
+        profileImageUrl: true;
+      };
+    };
+    images: {
+      select: {
+        id: true;
+        url: true;
+        order: true;
+      };
+    };
+  };
+}>;
+
 export interface IReviewsRepository {
+  create(
+    data: {
+      shopId: string;
+      authorId: string;
+      rating: number;
+      content: string | null;
+    },
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<{ id: string }>;
+  findById(
+    reviewId: string,
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<ReviewDetailRecord | null>;
   countByShopId(
     shopId: string,
     ctx?: TransactionContext<Prisma.TransactionClient>,
