@@ -8,6 +8,7 @@ import {
   IsArray,
   ArrayMaxSize,
   IsUrl,
+  ArrayUnique,
 } from 'class-validator';
 
 export class CreateReviewDto {
@@ -26,4 +27,11 @@ export class CreateReviewDto {
   @ArrayMaxSize(10) // 최대 10장 제한
   @IsUrl({}, { each: true })
   imageUrls?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @ArrayUnique()
+  @IsString({ each: true })
+  tags?: string[];
 }

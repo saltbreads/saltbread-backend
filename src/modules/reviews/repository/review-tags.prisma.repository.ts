@@ -33,4 +33,36 @@ export class ReviewTagsPrismaRepository implements IReviewTagsRepository {
 
     return tags as ReviewTagRecord[];
   }
+
+  async upsertAndIncreaseCount(
+    params: {
+      shopId: string;
+      label: string;
+    },
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<void> {
+    const db = getDb(ctx, this.prisma);
+
+    await db.reviewTag.upsert({
+      where: {
+        shopId_label: {
+          shopId: params.shopId,
+          label: params.label,
+        },
+      },
+      create: {
+        shopId: params.shopId,
+        label: params.label,
+        count: 1,
+        externalCount: 0,
+        isActive: true,
+      },
+      update: {
+        count: {
+          increment: 1,
+        },
+        isActive: true,
+      },
+    });
+  }
 }

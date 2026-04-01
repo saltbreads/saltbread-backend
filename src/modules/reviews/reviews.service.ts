@@ -140,7 +140,7 @@ export class ReviewsService {
     const shop = await this.shopRepo.findById(shopId);
     if (!shop) throw new NotFoundException('Shop not found');
 
-    // 2) 리뷰 + 이미지 한 트랜잭션에서 생성
+    // 2) 리뷰 + 이미지 + 태그 집계 한 트랜잭션에서 처리
     const created = await this.txRunner.run(async (ctx) => {
       const review = await this.reviewRepo.create(
         {
@@ -163,6 +163,20 @@ export class ReviewsService {
           })),
           ctx,
         );
+      }
+
+      if (body.tags?.length) {
+        const uniqueTags = [...new Set(body.tags)];
+
+        for (const label of uniqueTags) {
+          await this.reviewTagsRepo.upsertAndIncreaseCount(
+            {
+              shopId,
+              label,
+            },
+            ctx,
+          );
+        }
       }
 
       const reviewWithImages = await this.reviewRepo.findById(review.id, ctx);
