@@ -15,4 +15,12 @@ export interface IReviewTagsRepository {
     shopId: string,
     ctx?: TransactionContext<Prisma.TransactionClient>,
   ): Promise<ReviewTagRecord[]>;
+
+  upsertAndIncreaseCount(
+    params: {
+      shopId: string;
+      label: string;
+    },
+    ctx?: TransactionContext<Prisma.TransactionClient>,
+  ): Promise<void>;
 }

@@ -33,7 +33,7 @@ export class ShopsController {
   }
 
   @Get(':shopId/menus')
-  async hetShopMenu(@Param('shopId') shopId: string) {
+  async getShopMenu(@Param('shopId') shopId: string) {
     const data = await this.shopsService.getShopMenus(shopId);
     return { success: true, data };
   }
