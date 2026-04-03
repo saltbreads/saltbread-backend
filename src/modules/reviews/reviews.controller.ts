@@ -12,6 +12,7 @@ import { ReviewsService } from './reviews.service';
 import { GetShopReviewsQueryDto } from './dto/get-shop-reviews-query-dto';
 import { CreateReviewDto } from './dto/create-review-dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SuggestReviewTagsDto } from './dto/suggest-review-tags-dto';
 
 @Controller()
 export class ReviewsController {
@@ -48,6 +49,17 @@ export class ReviewsController {
       req.user.userId,
       body,
     );
+
+    return {
+      success: true,
+      data,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('reviews/ai-tag-suggestions')
+  async suggestReviewTags(@Body() dto: SuggestReviewTagsDto) {
+    const data = await this.reviewsService.suggestReviewTags(dto);
 
     return {
       success: true,

@@ -9,9 +9,10 @@ import { ReviewTagsPrismaRepository } from './repository/review-tags.prisma.repo
 import { REVIEW_IMAGES_REPOSITORY } from './interface/review-images.repository.interface';
 import { ReviewImagesPrismaRepository } from './repository/review-images.prisma.repository';
 import { AuthModule } from '../auth/auth.module';
+import { AiModule } from '../ai/ai.modlue';
 
 @Module({
-  imports: [forwardRef(() => ShopsModule), AuthModule],
+  imports: [forwardRef(() => ShopsModule), AuthModule, AiModule],
   controllers: [ReviewsController],
   providers: [
     ReviewsService,

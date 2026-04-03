@@ -1,29 +1,41 @@
-// src/modules/reviews/reviews.service.ts
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import { ReviewSort } from './dto/review-sort.enum';
-import { GetShopReviewsQueryDto } from './dto/get-shop-reviews-query-dto';
-import {
-  REVIEWS_REPOSITORY,
-  type IReviewsRepository,
-} from './interface/reviews.repository.interface';
-import {
-  SHOPS_REPOSITORY,
-  type IShopsRepository,
-} from '../shops/interface/shops.repository.interface';
 import {
   TRANSACTION_RUNNER,
   type ITransactionRunner,
 } from 'src/shared/prisma/transaction-runner.interface';
-import type { ReviewListItemRecord } from './interface/reviews.repository.interface';
-import { REVIEW_TAGS_REPOSITORY } from './interface/review-tags.repository.interface';
-import { type IReviewTagsRepository } from './interface/review-tags.repository.interface';
-import { CreateReviewDto } from './dto/create-review-dto';
 import {
-  type IReviewImagesRepository,
+  OPENAI_TAG_SUGGESTION_SERVICE,
+  type IOpenAiTagSuggestionService,
+} from '../ai/interface/openai-tag-suggestion.service.interface';
+import {
+  SHOPS_REPOSITORY,
+  type IShopsRepository,
+} from '../shops/interface/shops.repository.interface';
+import { CreateReviewDto } from './dto/create-review-dto';
+import { GetShopReviewsQueryDto } from './dto/get-shop-reviews-query-dto';
+import { ReviewSort } from './dto/review-sort.enum';
+import { SuggestReviewTagsDto } from './dto/suggest-review-tags-dto';
+import {
   REVIEW_IMAGES_REPOSITORY,
+  type IReviewImagesRepository,
 } from './interface/review-images.repository.interface';
-
+import {
+  REVIEW_TAGS_REPOSITORY,
+  type IReviewTagsRepository,
+} from './interface/review-tags.repository.interface';
+import type { ReviewListItemRecord } from './interface/reviews.repository.interface';
+import {
+  REVIEWS_REPOSITORY,
+  type IReviewsRepository,
+} from './interface/reviews.repository.interface';
+import { REVIEW_TAGS } from './constants/review-tags-constants';
 @Injectable()
 export class ReviewsService {
   constructor(
@@ -41,6 +53,9 @@ export class ReviewsService {
 
     @Inject(REVIEW_IMAGES_REPOSITORY)
     private readonly reviewImagesRepo: IReviewImagesRepository,
+
+    @Inject(OPENAI_TAG_SUGGESTION_SERVICE)
+    private readonly openAiTagSuggestionService: IOpenAiTagSuggestionService,
   ) {}
 
   async getShopReviews(shopId: string, query: GetShopReviewsQueryDto) {
@@ -209,5 +224,39 @@ export class ReviewsService {
         order: img.order,
       })),
     };
+  }
+
+  async suggestReviewTags(dto: SuggestReviewTagsDto) {
+    const content = dto.content.trim();
+
+    if (content.length < 5) {
+      throw new BadRequestException('리뷰 내용이 너무 짧습니다.');
+    }
+
+    try {
+      const allowedTags: string[] = [...REVIEW_TAGS];
+
+      const result = await this.openAiTagSuggestionService.suggestReviewTags({
+        content,
+        tags: allowedTags,
+        maxTags: 4,
+      });
+
+      const uniqueTags = [...new Set(result.tags)];
+
+      const filteredTags = uniqueTags
+        .filter((tag) => allowedTags.includes(tag))
+        .slice(0, 4);
+
+      return {
+        items: filteredTags,
+      };
+    } catch (error) {
+      console.error('[ReviewsService.suggestReviewTags] failed', error);
+
+      throw new InternalServerErrorException(
+        'AI 태그 추천 중 오류가 발생했습니다.',
+      );
+    }
   }
 }
