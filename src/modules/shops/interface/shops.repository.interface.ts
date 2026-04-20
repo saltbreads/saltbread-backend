@@ -29,6 +29,12 @@ export type SearchShopCard = {
   avgPrice: number | null;
   bestLabels: string[];
 };
+
+export type SearchShopsResult = {
+  items: SearchShopCard[];
+  hasMore: boolean;
+};
+
 export type FindNearByParams = {
   lat: number;
   lng: number;
@@ -70,7 +76,7 @@ export type ShopHomeRecord = {
 export interface IShopsRepository {
   findById(shopId: string): Promise<Shop | null>;
   findAllLocations(): Promise<ShopLocation[]>;
-  search(params: SearchShopsParams): Promise<SearchShopCard[]>;
+  search(params: SearchShopsParams): Promise<SearchShopsResult>;
   findNearby(params: FindNearByParams): Promise<NearbyShopCard[]>;
   findShopHomeById(shopId: string): Promise<ShopHomeRecord | null>;
 }

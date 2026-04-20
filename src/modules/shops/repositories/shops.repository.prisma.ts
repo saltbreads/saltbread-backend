@@ -129,13 +129,19 @@ export class ShopsPrismaRepository implements IShopsRepository {
     }));
   }
 
-  async search(params: SearchShopsParams): Promise<SearchShopCard[]> {
+  async search(params: SearchShopsParams): Promise<{
+    items: SearchShopCard[];
+    hasMore: boolean;
+  }> {
     const { lat, lng, radiusKm, limit, offset } = params;
     const search = (params.search ?? '').trim();
 
     const point = Prisma.sql`
       extensions.ST_SetSRID(extensions.ST_MakePoint(${lng}, ${lat}), 4326)::extensions.geography
     `;
+
+    // hasMore 판정용으로 1개 더 조회
+    const take = limit + 1;
 
     // search가 있을 때만 WHERE 조건을 추가
     const searchWhere = search
@@ -202,23 +208,29 @@ export class ShopsPrismaRepository implements IShopsRepository {
           )
           ${searchWhere}
         ORDER BY extensions.ST_Distance(s."geo", ${point}) ASC
-        LIMIT ${limit}
+        LIMIT ${take}
         OFFSET ${offset};
       `,
     );
 
-    return rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      heroImageUrl: r.heroImageUrl,
-      region: r.region,
-      latitude: toNumberSafe(r.latitude),
-      longitude: toNumberSafe(r.longitude),
-      avgRating: Number(r.avgRating ?? 0),
-      reviewCount: Number(r.reviewCount ?? 0),
-      avgPrice: r.avgPrice == null ? null : Number(r.avgPrice),
-      bestLabels: Array.isArray(r.bestLabels) ? r.bestLabels : [],
-    }));
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+
+    return {
+      items: items.map((r) => ({
+        id: r.id,
+        name: r.name,
+        heroImageUrl: r.heroImageUrl,
+        region: r.region,
+        latitude: toNumberSafe(r.latitude),
+        longitude: toNumberSafe(r.longitude),
+        avgRating: Number(r.avgRating ?? 0),
+        reviewCount: Number(r.reviewCount ?? 0),
+        avgPrice: r.avgPrice == null ? null : Number(r.avgPrice),
+        bestLabels: Array.isArray(r.bestLabels) ? r.bestLabels : [],
+      })),
+      hasMore,
+    };
   }
 
   async findShopHomeById(shopId: string): Promise<ShopHomeRecord | null> {
