@@ -3,6 +3,7 @@ import { ShopsService } from './shops.service';
 import { GetNearbyShopsQueryDto } from './dto/get-nearby-shops.query.dto';
 import { GetSearchShopsQueryDto } from './dto/get-search-shops.query.dto';
 import { GetShopPhotosQueryDto } from './dto/get-shop-photos-query.dto';
+
 @Controller('shops')
 export class ShopsController {
   constructor(private readonly shopsService: ShopsService) {}
