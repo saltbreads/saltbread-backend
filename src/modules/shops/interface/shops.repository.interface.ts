@@ -24,6 +24,9 @@ export type SearchShopCard = {
   region: string;
   latitude: number;
   longitude: number;
+
+  distanceMeters: number;
+
   avgRating: number;
   reviewCount: number;
   avgPrice: number | null;
@@ -32,7 +35,7 @@ export type SearchShopCard = {
 
 export type SearchShopsResult = {
   items: SearchShopCard[];
-  hasMore: boolean;
+  hasNext: boolean;
 };
 
 export type FindNearByParams = {
