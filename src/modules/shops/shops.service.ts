@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   SHOPS_REPOSITORY,
   type IShopsRepository,
@@ -6,7 +6,6 @@ import {
 import { GetNearbyShopsQueryDto } from './dto/get-nearby-shops.query.dto';
 import { GetSearchShopsQueryDto } from './dto/get-search-shops.query.dto';
 import { ShopLinkType } from '@prisma/client';
-import { NotFoundException } from '@nestjs/common';
 import { ShopMenuDto } from './dto/shop-menu.dto';
 import { ShopHomeDto } from './dto/shop-home.dto';
 import {
@@ -132,7 +131,6 @@ export class ShopsService {
     if (!shop) throw new NotFoundException('Shop not found');
 
     const heroUrl = shop.heroImageUrl ?? null;
-
     const need = heroUrl ? 4 : 5;
 
     const reviewImages = await this.reviewImagesRepo.findRecentByShopId(
@@ -159,10 +157,8 @@ export class ShopsService {
     const limit = query.limit ?? 20;
     const cursor = query.cursor;
 
-    // 첫 페이지에서만 hero 포함
     const heroUrl = !cursor ? (shop.heroImageUrl ?? null) : null;
 
-    // hasNext 판정하기 위해 서비스에서 take + 1 로 가져옴
     const take = limit + 1;
     const rows = await this.reviewImagesRepo.findCursorByShopId(shopId, {
       take,

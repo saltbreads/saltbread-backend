@@ -4,18 +4,32 @@ import type {
   IShopsRepository,
   SearchShopsParams,
   ShopLocation,
+  SearchShopCard,
+  NearbyShopCard,
+  ShopHomeRecord,
 } from '../interface/shops.repository.interface';
-import { NearbyShopCard } from 'src/modules/shops/interface/shops.repository.interface';
-import { SearchShopCard } from '../interface/shops.repository.interface';
 import { toNumberSafe } from 'src/shared/utils/toNumberSafe';
 import { Prisma, Shop } from '@prisma/client';
-import { ShopHomeRecord } from '../interface/shops.repository.interface';
 
 type NearbyShopCardRow = {
   id: string;
   name: string;
   heroImageUrl: string | null;
   region: string;
+  avgRating: number | null;
+  reviewCount: number | null;
+  avgPrice: number | null;
+  bestLabels: string[] | null;
+};
+
+type SearchShopCardRow = {
+  id: string;
+  name: string;
+  heroImageUrl: string | null;
+  region: string;
+  latitude: Prisma.Decimal | number;
+  longitude: Prisma.Decimal | number;
+  distanceMeters: number | null;
   avgRating: number | null;
   reviewCount: number | null;
   avgPrice: number | null;
@@ -105,12 +119,18 @@ export class ShopsPrismaRepository implements IShopsRepository {
         AND s."geo" IS NOT NULL
         AND extensions.ST_DWithin(
           s."geo",
-          extensions.ST_SetSRID(extensions.ST_MakePoint(${lng}, ${lat}), 4326)::extensions.geography,
+          extensions.ST_SetSRID(
+            extensions.ST_MakePoint(${lng}, ${lat}),
+            4326
+          )::extensions.geography,
           ${radiusKm} * 1000
         )
       ORDER BY extensions.ST_Distance(
         s."geo",
-        extensions.ST_SetSRID(extensions.ST_MakePoint(${lng}, ${lat}), 4326)::extensions.geography
+        extensions.ST_SetSRID(
+          extensions.ST_MakePoint(${lng}, ${lat}),
+          4326
+        )::extensions.geography
       ) ASC
       LIMIT ${limit}
       OFFSET ${offset};
@@ -131,16 +151,19 @@ export class ShopsPrismaRepository implements IShopsRepository {
 
   async search(params: SearchShopsParams): Promise<{
     items: SearchShopCard[];
-    hasMore: boolean;
+    hasNext: boolean;
   }> {
     const { lat, lng, radiusKm, limit, offset } = params;
     const search = (params.search ?? '').trim();
 
     const point = Prisma.sql`
-      extensions.ST_SetSRID(extensions.ST_MakePoint(${lng}, ${lat}), 4326)::extensions.geography
+      extensions.ST_SetSRID(
+        extensions.ST_MakePoint(${lng}, ${lat}),
+        4326
+      )::extensions.geography
     `;
 
-    // hasMore 판정용으로 1개 더 조회
+    // hasNext 판정용으로 1개 더 조회
     const take = limit + 1;
 
     // search가 있을 때만 WHERE 조건을 추가
@@ -154,7 +177,7 @@ export class ShopsPrismaRepository implements IShopsRepository {
         `
       : Prisma.empty;
 
-    const rows = await this.prisma.$queryRaw<SearchShopCard[]>(
+    const rows = await this.prisma.$queryRaw<SearchShopCardRow[]>(
       Prisma.sql`
         SELECT
           s."id",
@@ -163,15 +186,18 @@ export class ShopsPrismaRepository implements IShopsRepository {
           s."region",
           s."latitude",
           s."longitude",
-  
+
+          -- query로 받은 좌표 기준 실제 거리(m)
+          extensions.ST_Distance(s."geo", ${point})::float8 AS "distanceMeters",
+
           COALESCE(r."reviewCount", 0)::int AS "reviewCount",
           COALESCE(r."avgRating", 0)::float8 AS "avgRating",
-  
+
           m."avgPrice"::float8 AS "avgPrice",
-  
+
           COALESCE(t."bestLabels", ARRAY[]::text[]) AS "bestLabels"
         FROM "Shop" s
-  
+
         LEFT JOIN LATERAL (
           SELECT
             COUNT(*) AS "reviewCount",
@@ -180,14 +206,14 @@ export class ShopsPrismaRepository implements IShopsRepository {
           WHERE "shopId" = s."id"
             AND "isHidden" = false
         ) r ON true
-  
+
         LEFT JOIN LATERAL (
           SELECT AVG("price") AS "avgPrice"
           FROM "ShopMenu"
           WHERE "shopId" = s."id"
             AND "price" IS NOT NULL
         ) m ON true
-  
+
         LEFT JOIN LATERAL (
           SELECT ARRAY(
             SELECT rt."label"
@@ -198,7 +224,7 @@ export class ShopsPrismaRepository implements IShopsRepository {
             LIMIT 3
           ) AS "bestLabels"
         ) t ON true
-  
+
         WHERE s."isActive" = true
           AND s."geo" IS NOT NULL
           AND extensions.ST_DWithin(
@@ -213,8 +239,8 @@ export class ShopsPrismaRepository implements IShopsRepository {
       `,
     );
 
-    const hasMore = rows.length > limit;
-    const items = hasMore ? rows.slice(0, limit) : rows;
+    const hasNext = rows.length > limit;
+    const items = hasNext ? rows.slice(0, limit) : rows;
 
     return {
       items: items.map((r) => ({
@@ -224,12 +250,13 @@ export class ShopsPrismaRepository implements IShopsRepository {
         region: r.region,
         latitude: toNumberSafe(r.latitude),
         longitude: toNumberSafe(r.longitude),
+        distanceMeters: Number(r.distanceMeters ?? 0),
         avgRating: Number(r.avgRating ?? 0),
         reviewCount: Number(r.reviewCount ?? 0),
         avgPrice: r.avgPrice == null ? null : Number(r.avgPrice),
         bestLabels: Array.isArray(r.bestLabels) ? r.bestLabels : [],
       })),
-      hasMore,
+      hasNext,
     };
   }
 
