@@ -12,4 +12,5 @@ export type UpsertOAuthUserInput = {
 
 export interface IUserRepository {
   upsertOAuthUser(input: UpsertOAuthUserInput): Promise<Pick<User, 'id'>>;
+  findById(id: string): Promise<Pick<User, 'id' | 'displayName' | 'nickname' | 'profileImageUrl' | 'email' | 'provider'> | null>;
 }
