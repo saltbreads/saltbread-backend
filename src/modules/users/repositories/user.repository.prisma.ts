@@ -38,7 +38,7 @@ export class UserPrismaRepository implements IUserRepository {
   }
 
   async findById(id: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -47,7 +47,13 @@ export class UserPrismaRepository implements IUserRepository {
         profileImageUrl: true,
         email: true,
         provider: true,
+        _count: { select: { favorites: true } },
       },
     });
+
+    if (!user) return null;
+
+    const { _count, ...rest } = user;
+    return { ...rest, favoriteCount: _count.favorites };
   }
 }
