@@ -36,4 +36,18 @@ export class UserPrismaRepository implements IUserRepository {
 
     return user;
   }
+
+  async findById(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        displayName: true,
+        nickname: true,
+        profileImageUrl: true,
+        email: true,
+        provider: true,
+      },
+    });
+  }
 }
