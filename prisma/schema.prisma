@@ -36,6 +36,7 @@ model User {
   sessions AuthSession[]
   reviews Review[]
   reviewImages ReviewImage[]
+  favorites UserFavorite[]
 
   @@unique([provider, providerUserId])
   @@index([provider])
@@ -97,6 +98,7 @@ model Shop {
   reviews Review[]
   reviewImages ReviewImage[]
   reviewTags ReviewTag[]
+  favorites UserFavorite[]
   @@unique([name, roadAddress])
   @@index([latitude, longitude])
 }
@@ -201,6 +203,22 @@ model ReviewImage {
   @@index([reviewId])
   @@index([createdAt])
   @@index([shopId, createdAt])
+}
+
+model UserFavorite {
+  id     String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, shopId])
+  @@index([userId])
+  @@index([shopId])
 }
 
 model ShopLink {
