@@ -54,6 +54,7 @@ export class ReviewsPrismaRepository implements IReviewsRepository {
           select: {
             id: true,
             nickname: true,
+            displayName: true,
             profileImageUrl: true,
           },
         },
@@ -107,6 +108,7 @@ export class ReviewsPrismaRepository implements IReviewsRepository {
           select: {
             id: true,
             nickname: true,
+            displayName: true,
             profileImageUrl: true,
           },
         },

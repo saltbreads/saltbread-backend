@@ -17,6 +17,7 @@ export type ReviewListItemRecord = Prisma.ReviewGetPayload<{
       select: {
         id: true;
         nickname: true;
+        displayName: true;
         profileImageUrl: true;
       };
     };
@@ -41,6 +42,7 @@ export type ReviewDetailRecord = Prisma.ReviewGetPayload<{
       select: {
         id: true;
         nickname: true;
+        displayName: true;
         profileImageUrl: true;
       };
     };
