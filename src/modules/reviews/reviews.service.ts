@@ -98,6 +98,7 @@ export class ReviewsService {
         ? {
             id: r.author.id,
             nickname: r.author.nickname ?? null,
+            displayName: r.author.displayName ?? null,
             profileImageUrl: r.author.profileImageUrl ?? null,
           }
         : null,
@@ -214,6 +215,7 @@ export class ReviewsService {
         ? {
             id: created.author.id,
             nickname: created.author.nickname ?? null,
+            displayName: created.author.displayName ?? null,
             profileImageUrl: created.author.profileImageUrl ?? null,
           }
         : null,
