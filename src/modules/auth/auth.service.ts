@@ -149,11 +149,12 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token reused/invalid');
     }
 
-    // rotation: 새 refresh 발급 + 해시 갱신
+    // rotation: 새 refresh 발급 + 해시 갱신 + 만료일 슬라이딩
     const newRefreshToken = this.signRefreshToken(userId, session.id);
     const newHash = await this.hashToken(newRefreshToken);
+    const newExpiresAt = this.parseRefreshExpiryDate();
 
-    await this.sessionRepo.updateRefreshHash(session.id, newHash);
+    await this.sessionRepo.updateRefreshHash(session.id, newHash, newExpiresAt);
 
     const newAccessToken = this.signAccessToken(userId);
 
