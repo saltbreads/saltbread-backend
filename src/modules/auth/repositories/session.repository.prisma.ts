@@ -37,10 +37,10 @@ export class SessionPrismaRepository implements ISessionRepository {
     });
   }
 
-  async updateRefreshHash(sessionId: string, newHash: string): Promise<void> {
+  async updateRefreshHash(sessionId: string, newHash: string, expiresAt: Date): Promise<void> {
     await this.prisma.authSession.update({
       where: { id: sessionId },
-      data: { refreshTokenHash: newHash },
+      data: { refreshTokenHash: newHash, expiresAt },
     });
   }
 

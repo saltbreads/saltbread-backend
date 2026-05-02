@@ -19,6 +19,6 @@ export interface ISessionRepository {
     refreshTokenHash: string;
     expiresAt: Date;
   } | null>;
-  updateRefreshHash(sessionId: string, newHash: string): Promise<void>;
+  updateRefreshHash(sessionId: string, newHash: string, expiresAt: Date): Promise<void>;
   deleteById(id: string): Promise<void>;
 }

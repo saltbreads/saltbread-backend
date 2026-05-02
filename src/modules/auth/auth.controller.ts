@@ -88,9 +88,13 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: Request, @Res() res: Response) {
-    const refreshToken = req.cookies?.['refresh_token'] as string | undefined;
+    const isMobile = req.headers['x-client-type'] === 'mobile';
+    const bodyToken = (req.body as { refreshToken?: string })?.refreshToken;
+    const refreshToken =
+      (isMobile && bodyToken) || req.cookies?.['refresh_token'] as string | undefined;
+
     if (!refreshToken) {
-      throw new UnauthorizedException('No refresh cookie');
+      throw new UnauthorizedException('No refresh token');
     }
 
     const {
@@ -106,6 +110,7 @@ export class AuthController {
       data: {
         accessToken,
         sessionId,
+        ...(isMobile && { refreshToken: newRefreshToken }),
       },
     });
   }
@@ -140,6 +145,7 @@ export class AuthController {
       data: {
         accessToken,
         sessionId,
+        ...(req.headers['x-client-type'] === 'mobile' && { refreshToken }),
       },
     });
   }
