@@ -151,8 +151,9 @@ model Review {
   author   User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   // 내용
-  rating Int      
+  rating Int
   content String?
+  tags    String[] @default([])
 
   // 메타
   isHidden Boolean @default(false)

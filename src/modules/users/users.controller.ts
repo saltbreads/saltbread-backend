@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -13,6 +13,21 @@ export class UsersController {
   async getMe(@Req() req: Request) {
     const user = req.user as AuthPrincipal;
     const data = await this.usersService.getMe(user.userId);
+    return { success: true, data };
+  }
+
+  @Get('me/reviews')
+  @UseGuards(JwtAuthGuard)
+  async getMyReviews(
+    @Req() req: Request,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const user = req.user as AuthPrincipal;
+    const data = await this.usersService.getMyReviews(user.userId, {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
     return { success: true, data };
   }
 }

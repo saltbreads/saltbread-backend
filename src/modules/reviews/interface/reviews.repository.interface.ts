@@ -36,6 +36,7 @@ export type ReviewDetailRecord = Prisma.ReviewGetPayload<{
     id: true;
     rating: true;
     content: true;
+    tags: true;
     createdAt: true;
     updatedAt: true;
     author: {
@@ -63,6 +64,7 @@ export interface IReviewsRepository {
       authorId: string;
       rating: number;
       content: string | null;
+      tags?: string[];
     },
     ctx?: TransactionContext<Prisma.TransactionClient>,
   ): Promise<{ id: string }>;

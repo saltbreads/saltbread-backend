@@ -19,6 +19,7 @@ export class ReviewsPrismaRepository implements IReviewsRepository {
       authorId: string;
       rating: number;
       content: string | null;
+      tags?: string[];
     },
     ctx?: TransactionContext<Prisma.TransactionClient>,
   ): Promise<{ id: string }> {
@@ -48,6 +49,7 @@ export class ReviewsPrismaRepository implements IReviewsRepository {
         id: true,
         rating: true,
         content: true,
+        tags: true,
         createdAt: true,
         updatedAt: true,
         author: {
