@@ -5,6 +5,9 @@ export type FavoriteShopItem = {
   name: string;
   heroImageUrl: string | null;
   region: string;
+  roadAddress: string | null;
+  avgRating: number | null;
+  reviewCount: number;
   createdAt: Date;
 };
 

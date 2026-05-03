@@ -30,6 +30,7 @@ export class FavoritePrismaRepository implements IFavoriteRepository {
             name: true,
             heroImageUrl: true,
             region: true,
+            roadAddress: true,
           },
         },
         createdAt: true,
@@ -37,12 +38,41 @@ export class FavoritePrismaRepository implements IFavoriteRepository {
       orderBy: { createdAt: 'desc' },
     });
 
-    return favorites.map((f) => ({
-      shopId: f.shop.id,
-      name: f.shop.name,
-      heroImageUrl: f.shop.heroImageUrl,
-      region: f.shop.region,
-      createdAt: f.createdAt,
-    }));
+    if (favorites.length === 0) return [];
+
+    const shopIds = favorites.map((f) => f.shop.id);
+
+    const reviewStats = await this.prisma.review.groupBy({
+      by: ['shopId'],
+      where: { shopId: { in: shopIds }, isHidden: false },
+      _count: { id: true },
+      _avg: { rating: true },
+    });
+
+    const statsMap = new Map(
+      reviewStats.map((s) => [
+        s.shopId,
+        {
+          reviewCount: s._count.id,
+          avgRating: s._avg.rating
+            ? Math.round(s._avg.rating * 10) / 10
+            : null,
+        },
+      ]),
+    );
+
+    return favorites.map((f) => {
+      const stats = statsMap.get(f.shop.id);
+      return {
+        shopId: f.shop.id,
+        name: f.shop.name,
+        heroImageUrl: f.shop.heroImageUrl,
+        region: f.shop.region,
+        roadAddress: f.shop.roadAddress,
+        avgRating: stats?.avgRating ?? null,
+        reviewCount: stats?.reviewCount ?? 0,
+        createdAt: f.createdAt,
+      };
+    });
   }
 }
