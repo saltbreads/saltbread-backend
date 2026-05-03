@@ -164,6 +164,7 @@ export class ReviewsService {
           authorId: userId,
           rating: body.rating,
           content: body.content ?? null,
+          tags: body.tags ?? [],
         },
         ctx,
       );
@@ -211,6 +212,7 @@ export class ReviewsService {
       content: created.content,
       createdAt: created.createdAt,
 
+      tags: created.tags,
       author: created.author
         ? {
             id: created.author.id,
