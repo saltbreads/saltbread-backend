@@ -18,6 +18,15 @@ export type MyReviewItem = {
   images: { id: string; url: string; order: number }[];
   shop: { id: string; name: string; roadAddress: string | null; heroImageUrl: string | null };
   createdAt: Date;
+  likeCount: number;
+  commentCount: number;
+  isLikedByMe: boolean;
+  comments: {
+    id: string;
+    content: string;
+    createdAt: Date;
+    author: { id: string; nickname: string | null; displayName: string | null; profileImageUrl: string | null };
+  }[];
 };
 
 export type MyReviewStats = {

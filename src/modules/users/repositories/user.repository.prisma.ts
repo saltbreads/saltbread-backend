@@ -84,7 +84,7 @@ export class UserPrismaRepository implements IUserRepository {
   }
 
   async findMyReviews(userId: string, args: { skip: number; take: number }): Promise<MyReviewItem[]> {
-    return this.prisma.review.findMany({
+    const rows = await this.prisma.review.findMany({
       where: { authorId: userId, isHidden: false },
       skip: args.skip,
       take: args.take,
@@ -107,8 +107,61 @@ export class UserPrismaRepository implements IUserRepository {
           select: { id: true, url: true, order: true },
           orderBy: [{ order: 'asc' }, { id: 'asc' }],
         },
+        _count: {
+          select: { likes: true, comments: true },
+        },
+        comments: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            author: {
+              select: {
+                id: true,
+                nickname: true,
+                displayName: true,
+                profileImageUrl: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' as const },
+          take: 3,
+        },
       },
     });
+
+    const reviewIds = rows.map((r) => r.id);
+    const likedRows = reviewIds.length
+      ? await this.prisma.reviewLike.findMany({
+          where: { userId, reviewId: { in: reviewIds } },
+          select: { reviewId: true },
+        })
+      : [];
+    const likedSet = new Set(likedRows.map((l) => l.reviewId));
+
+    return rows.map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      content: r.content,
+      tags: r.tags,
+      images: r.images,
+      shop: r.shop,
+      createdAt: r.createdAt,
+      likeCount: r._count.likes,
+      commentCount: r._count.comments,
+      isLikedByMe: likedSet.has(r.id),
+      comments: r.comments.map((c) => ({
+        id: c.id,
+        content: c.content,
+        createdAt: c.createdAt,
+        author: {
+          id: c.author.id,
+          nickname: c.author.nickname ?? null,
+          displayName: c.author.displayName ?? null,
+          profileImageUrl: c.author.profileImageUrl ?? null,
+        },
+      })),
+    }));
   }
 
   async countMyReviews(userId: string): Promise<number> {

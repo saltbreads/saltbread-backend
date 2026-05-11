@@ -35,6 +35,12 @@ import {
   REVIEWS_REPOSITORY,
   type IReviewsRepository,
 } from './interface/reviews.repository.interface';
+import {
+  REVIEW_COMMENT_REPOSITORY,
+  REVIEW_LIKE_REPOSITORY,
+  type IReviewCommentRepository,
+  type IReviewLikeRepository,
+} from './interface/review-interactions.repository.interface';
 import { REVIEW_TAGS } from './constants/review-tags-constants';
 @Injectable()
 export class ReviewsService {
@@ -56,9 +62,15 @@ export class ReviewsService {
 
     @Inject(OPENAI_TAG_SUGGESTION_SERVICE)
     private readonly openAiTagSuggestionService: IOpenAiTagSuggestionService,
+
+    @Inject(REVIEW_COMMENT_REPOSITORY)
+    private readonly reviewCommentRepo: IReviewCommentRepository,
+
+    @Inject(REVIEW_LIKE_REPOSITORY)
+    private readonly reviewLikeRepo: IReviewLikeRepository,
   ) {}
 
-  async getShopReviews(shopId: string, query: GetShopReviewsQueryDto) {
+  async getShopReviews(shopId: string, query: GetShopReviewsQueryDto, userId?: string) {
     // 1) shop 존재 확인 (명확한 404)
     const shop = await this.shopRepo.findById(shopId);
     if (!shop) throw new NotFoundException('Shop not found');
@@ -87,12 +99,22 @@ export class ReviewsService {
       return { total, items };
     });
 
-    // 5) 응답 가공 (필드명은 너희 Review select/include에 맞춰 조정)
+    // 5) isLikedByMe 배치 조회
+    const reviewIds = items.map((r) => r.id);
+    const likedIds = userId && reviewIds.length
+      ? await this.reviewLikeRepo.getLikedReviewIds(userId, reviewIds)
+      : [];
+    const likedSet = new Set(likedIds);
+
+    // 6) 응답 가공
     const reviews = items.map((r: ReviewListItemRecord) => ({
       id: r.id,
       rating: r.rating,
       content: r.content,
       createdAt: r.createdAt,
+      likeCount: r._count.likes,
+      commentCount: r._count.comments,
+      isLikedByMe: likedSet.has(r.id),
 
       author: r.author
         ? {
@@ -108,6 +130,18 @@ export class ReviewsService {
         url: img.url,
         order: img.order,
       })),
+
+      comments: r.comments.map((c) => ({
+        id: c.id,
+        content: c.content,
+        createdAt: c.createdAt,
+        author: {
+          id: c.author.id,
+          nickname: c.author.nickname ?? null,
+          displayName: c.author.displayName ?? null,
+          profileImageUrl: c.author.profileImageUrl ?? null,
+        },
+      })),
     }));
 
     return {
@@ -117,6 +151,35 @@ export class ReviewsService {
       total,
       hasNext: page * limit < total,
     };
+  }
+
+  async addComment(reviewId: string, authorId: string, content: string) {
+    return this.reviewCommentRepo.create({ reviewId, authorId, content });
+  }
+
+  async deleteComment(commentId: string, authorId: string) {
+    return this.reviewCommentRepo.delete(commentId, authorId);
+  }
+
+  async getComments(reviewId: string, query: { page?: number; limit?: number }) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.reviewCommentRepo.findPageByReviewId(reviewId, { skip, take: limit }),
+      this.reviewCommentRepo.countByReviewId(reviewId),
+    ]);
+
+    return { items, page, limit, total, hasNext: page * limit < total };
+  }
+
+  async addLike(reviewId: string, userId: string) {
+    return this.reviewLikeRepo.add(reviewId, userId);
+  }
+
+  async removeLike(reviewId: string, userId: string) {
+    return this.reviewLikeRepo.remove(reviewId, userId);
   }
 
   // TODO:
