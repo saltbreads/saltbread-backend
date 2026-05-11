@@ -37,6 +37,8 @@ model User {
   reviews Review[]
   reviewImages ReviewImage[]
   favorites UserFavorite[]
+  reviewComments ReviewComment[]
+  reviewLikes ReviewLike[]
 
   @@unique([provider, providerUserId])
   @@index([provider])
@@ -161,10 +163,45 @@ model Review {
   updatedAt DateTime @updatedAt
 
   // 연결
-  images ReviewImage[]
+  images   ReviewImage[]
+  comments ReviewComment[]
+  likes    ReviewLike[]
 
   @@index([shopId, createdAt])
   @@index([shopId, rating])
+}
+
+model ReviewComment {
+  id       String @id @default(cuid())
+
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reviewId, createdAt])
+  @@index([authorId])
+}
+
+model ReviewLike {
+  id       String @id @default(cuid())
+
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+  @@index([userId])
 }
 
 model ReviewTag {

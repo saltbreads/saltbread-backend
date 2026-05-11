@@ -28,6 +28,29 @@ export type ReviewListItemRecord = Prisma.ReviewGetPayload<{
         order: true;
       };
     };
+    _count: {
+      select: {
+        likes: true;
+        comments: true;
+      };
+    };
+    comments: {
+      select: {
+        id: true;
+        content: true;
+        createdAt: true;
+        author: {
+          select: {
+            id: true;
+            nickname: true;
+            displayName: true;
+            profileImageUrl: true;
+          };
+        };
+      };
+      orderBy: { createdAt: 'desc' };
+      take: 3;
+    };
   };
 }>;
 

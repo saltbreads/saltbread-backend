@@ -8,6 +8,14 @@ import { REVIEW_TAGS_REPOSITORY } from './interface/review-tags.repository.inter
 import { ReviewTagsPrismaRepository } from './repository/review-tags.prisma.repository';
 import { REVIEW_IMAGES_REPOSITORY } from './interface/review-images.repository.interface';
 import { ReviewImagesPrismaRepository } from './repository/review-images.prisma.repository';
+import {
+  REVIEW_COMMENT_REPOSITORY,
+  REVIEW_LIKE_REPOSITORY,
+} from './interface/review-interactions.repository.interface';
+import {
+  ReviewCommentPrismaRepository,
+  ReviewLikePrismaRepository,
+} from './repository/review-interactions.prisma.repository';
 import { AuthModule } from '../auth/auth.module';
 import { AiModule } from '../ai/ai.modlue';
 
@@ -27,6 +35,14 @@ import { AiModule } from '../ai/ai.modlue';
     {
       provide: REVIEW_IMAGES_REPOSITORY,
       useClass: ReviewImagesPrismaRepository,
+    },
+    {
+      provide: REVIEW_COMMENT_REPOSITORY,
+      useClass: ReviewCommentPrismaRepository,
+    },
+    {
+      provide: REVIEW_LIKE_REPOSITORY,
+      useClass: ReviewLikePrismaRepository,
     },
   ],
   exports: [REVIEW_IMAGES_REPOSITORY],

@@ -115,12 +115,28 @@ export class ReviewsPrismaRepository implements IReviewsRepository {
           },
         },
         images: {
+          select: { id: true, url: true, order: true },
+          orderBy: [{ order: 'asc' }, { id: 'asc' }],
+        },
+        _count: {
+          select: { likes: true, comments: true },
+        },
+        comments: {
           select: {
             id: true,
-            url: true,
-            order: true,
+            content: true,
+            createdAt: true,
+            author: {
+              select: {
+                id: true,
+                nickname: true,
+                displayName: true,
+                profileImageUrl: true,
+              },
+            },
           },
-          orderBy: [{ order: 'asc' }, { id: 'asc' }],
+          orderBy: { createdAt: 'desc' as const },
+          take: 3,
         },
       },
     });
